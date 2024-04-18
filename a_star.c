@@ -43,7 +43,7 @@ void generate_grid() {
     for (int x = 0; x < GridWidth; x++) {
         for (int y = 0; y < GridHeight; y++) {
             nodes[x][y] = create_node(x, y);
-            if (rand() % 10 < 1) {
+            if (rand() % 10 < 2) {
                 nodes[x][y]->isBlocked = true;
             } else {
                 nodes[x][y]->isBlocked = false;
@@ -164,9 +164,6 @@ void update_a_star_visual(Node *nodes[GridWidth][GridHeight], Node *start_node,
             parent_node = parent_node->parent;
         }
         print_visual_nodes(visual_nodes);
-        usleep(5000);
-        exit(0);
-        sleep(5);
         exit(0);
     }
 
@@ -187,10 +184,13 @@ void update_a_star_visual(Node *nodes[GridWidth][GridHeight], Node *start_node,
     }
     if (!isInClosedList) {
         visual_nodes[current_node->x][current_node->y] = 'X';
+        print_visual_nodes(visual_nodes);
+        usleep(30000);
     }
-
-    print_visual_nodes(visual_nodes);
-    usleep(50000);
+    if (isInClosedList) {
+        print_visual_nodes(visual_nodes);
+        usleep(100);
+    }
 }
 
 void a_star(Node *start_node, Node *end_node) {
