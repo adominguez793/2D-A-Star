@@ -2,10 +2,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
+#include <unistd.h>
 
 typedef struct Node {
     int x;
     int y;
+    bool isBlocked;
     float g;
     float h;
     float f;
@@ -32,8 +34,8 @@ Node *create_node(int x, int y) {
     return new_node;
 }
 
-const int GridWidth = 100;
-const int GridHeight = 100;
+const int GridWidth = 10;
+const int GridHeight = 75;
 
 Node *nodes[GridWidth][GridHeight];
 
@@ -41,22 +43,29 @@ void generate_grid() {
     for (int x = 0; x < GridWidth; x++) {
         for (int y = 0; y < GridHeight; y++) {
             nodes[x][y] = create_node(x, y);
+            if (rand() % 10 < 1) {
+                nodes[x][y]->isBlocked = true;
+            } else {
+                nodes[x][y]->isBlocked = false;
+            }
         }
     }
 
     for (int x = 0; x < GridWidth; x++) {
         for (int y = 0; y < GridHeight; y++) {
-            if (x > 0) {  // left neighbor
-                nodes[x][y]->neighbors[0] = nodes[x - 1][y];
-            }
-            if (x < (GridWidth - 1)) {  // right neighbor
-                nodes[x][y]->neighbors[1] = nodes[x + 1][y];
-            }
-            if (y > 0) {  // down neighbor
-                nodes[x][y]->neighbors[2] = nodes[x][y - 1];
-            }
-            if (y < (GridHeight - 1)) {  // up neighbor
-                nodes[x][y]->neighbors[3] = nodes[x][y + 1];
+            if (!nodes[x][y]->isBlocked) {
+                if (x > 0) {  // left neighbor
+                    nodes[x][y]->neighbors[0] = nodes[x - 1][y];
+                }
+                if (x < (GridWidth - 1)) {  // right neighbor
+                    nodes[x][y]->neighbors[1] = nodes[x + 1][y];
+                }
+                if (y > 0) {  // down neighbor
+                    nodes[x][y]->neighbors[2] = nodes[x][y - 1];
+                }
+                if (y < (GridHeight - 1)) {  // up neighbor
+                    nodes[x][y]->neighbors[3] = nodes[x][y + 1];
+                }
             }
         }
     }
@@ -95,21 +104,87 @@ Node *get_lowest_f_node(Node **open_list, int open_list_size) {
     return lowest_f_cost_node;
 }
 
-void backtrack(Node *target_node) {
+void a_star_visual(Node *nodes[GridWidth][GridHeight], Node *start_node,
+                   Node *end_node) {
     puts("");
-    puts("Starting backtrack...");
 
-    Node *parent_node = target_node->parent;
-    int i = 1;
-    while (parent_node != NULL) {
-        printf("Parent node #%d... f: %f, g: %f, h: %f\n", i, parent_node->f,
-               parent_node->g, parent_node->h);
-        i++;
-        parent_node = parent_node->parent;
+    for (int x = 0; x < GridWidth; x++) {
+        for (int y = 0; y < GridHeight; y++) {
+            if (nodes[x][y]->isBlocked) {
+                printf("#");
+            } else if (start_node->x == x && start_node->y == y) {
+                printf("S");
+            } else if (end_node->x == x && end_node->y == y) {
+                printf("G");
+            } else {
+                printf(".");
+            }
+        }
+        puts("");
+    }
+    sleep(5);
+}
+
+void print_visual_nodes(char visual_nodes[GridWidth][GridHeight]) {
+    for (int x = 0; x < GridWidth; x++) {
+        for (int y = 0; y < GridHeight; y++) {
+            printf("%c", visual_nodes[x][y]);
+        }
+        puts("");
     }
 }
 
+void update_a_star_visual(Node *nodes[GridWidth][GridHeight], Node *start_node,
+                          Node *end_node, Node *current_node, Node *open_list[],
+                          int open_list_size, Node *closed_list[],
+                          int closed_list_size) {
+    system("clear");
+
+    char visual_nodes[GridWidth][GridHeight];
+
+    for (int x = 0; x < GridWidth; x++) {
+        for (int y = 0; y < GridHeight; y++) {
+            if (start_node->x == x && start_node->y == y) {
+                visual_nodes[x][y] = 'S';
+            } else if (nodes[x][y]->isBlocked) {
+                visual_nodes[x][y] = '#';
+            } else if (end_node->x == x && end_node->y == y) {
+                visual_nodes[x][y] = 'G';
+            } else {
+                visual_nodes[x][y] = '.';
+            }
+        }
+    }
+
+    // Backtrack
+    if (current_node == end_node) {
+        Node *parent_node = end_node->parent;
+        while (parent_node != NULL) {
+            visual_nodes[parent_node->x][parent_node->y] = 'X';
+            parent_node = parent_node->parent;
+        }
+        print_visual_nodes(visual_nodes);
+        usleep(50000);
+        exit(0);
+    }
+
+    for (int i = 0; i < open_list_size; i++) {
+        visual_nodes[open_list[i]->x][open_list[i]->y] = 'o';
+    }
+
+    for (int i = 0; i < closed_list_size; i++) {
+        visual_nodes[closed_list[i]->x][closed_list[i]->y] = 'c';
+    }
+
+    visual_nodes[current_node->x][current_node->y] = 'X';
+
+    print_visual_nodes(visual_nodes);
+    usleep(50000);
+}
+
 void a_star(Node *start_node, Node *end_node) {
+    a_star_visual(nodes, start_node, end_node);
+
     int open_list_capacity = 100;
     Node **open_list = (Node **)malloc(open_list_capacity * sizeof(Node *));
     if (open_list == NULL) {
@@ -141,6 +216,10 @@ void a_star(Node *start_node, Node *end_node) {
             exit(1);
         }
 
+        update_a_star_visual(nodes, start_node, end_node, current_node,
+                             open_list, open_list_size, closed_list,
+                             closed_list_size);
+
         for (int j = 0; j < open_list_size; j++) {
             if (open_list[j] == current_node) {
                 open_list_size--;
@@ -162,11 +241,10 @@ void a_star(Node *start_node, Node *end_node) {
         closed_list[closed_list_size] = current_node;
         closed_list_size++;
 
-        printf("Current node... f: %f, g: %f, h: %f\n", current_node->f,
-               current_node->g, current_node->h);
-
         if (current_node == end_node) {
-            backtrack(current_node);
+            update_a_star_visual(nodes, start_node, end_node, current_node,
+                                 open_list, open_list_size, closed_list,
+                                 closed_list_size);
             break;
         }
 
@@ -180,7 +258,7 @@ void a_star(Node *start_node, Node *end_node) {
         for (int i = 0; i < num_of_neighbor_nodes; i++) {
             Node *neighbor_node = neighbor_nodes[i];
 
-            if (neighbor_node == NULL) {
+            if (neighbor_node == NULL || neighbor_node->isBlocked) {
                 continue;
             }
 
@@ -236,17 +314,13 @@ int main() {
     Node *end_node = random_node();
     int distance = manhattan_distance(start_node, end_node);
 
-    while (distance < 9) {
+    while (distance < 40 && !start_node->isBlocked && !end_node->isBlocked) {
         start_node = random_node();
         end_node = random_node();
         distance = manhattan_distance(start_node, end_node);
     }
 
     puts("Commencing operation A*...");
-    puts("");
-    printf("start node --- x: %d, y: %d \n", start_node->x, start_node->y);
-    printf("end node --- x: %d, y: %d \n", end_node->x, end_node->y);
-    printf("Distance between start and end node: %d\n", distance);
     puts("");
 
     a_star(start_node, end_node);
