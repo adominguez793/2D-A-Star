@@ -34,8 +34,8 @@ Node *create_node(int x, int y) {
     return new_node;
 }
 
-const int GridWidth = 10;
-const int GridHeight = 75;
+const int GridWidth = 12;
+const int GridHeight = 85;
 
 Node *nodes[GridWidth][GridHeight];
 
@@ -43,7 +43,7 @@ void generate_grid() {
     for (int x = 0; x < GridWidth; x++) {
         for (int y = 0; y < GridHeight; y++) {
             nodes[x][y] = create_node(x, y);
-            if (rand() % 10 < 2) {
+            if (rand() % 420 < 69) {
                 nodes[x][y]->isBlocked = true;
             } else {
                 nodes[x][y]->isBlocked = false;
@@ -122,7 +122,7 @@ void a_star_visual(Node *nodes[GridWidth][GridHeight], Node *start_node,
         }
         puts("");
     }
-    sleep(5);
+    sleep(2);
 }
 
 void print_visual_nodes(char visual_nodes[GridWidth][GridHeight]) {
