@@ -164,7 +164,9 @@ void update_a_star_visual(Node *nodes[GridWidth][GridHeight], Node *start_node,
             parent_node = parent_node->parent;
         }
         print_visual_nodes(visual_nodes);
-        usleep(50000);
+        usleep(5000);
+        exit(0);
+        sleep(5);
         exit(0);
     }
 
@@ -176,7 +178,16 @@ void update_a_star_visual(Node *nodes[GridWidth][GridHeight], Node *start_node,
         visual_nodes[closed_list[i]->x][closed_list[i]->y] = 'c';
     }
 
-    visual_nodes[current_node->x][current_node->y] = 'X';
+    bool isInClosedList = false;
+    for (int i = 0; i < closed_list_size; i++) {
+        if (closed_list[i] == current_node) {
+            isInClosedList = true;
+            break;
+        }
+    }
+    if (!isInClosedList) {
+        visual_nodes[current_node->x][current_node->y] = 'X';
+    }
 
     print_visual_nodes(visual_nodes);
     usleep(50000);
@@ -314,13 +325,13 @@ int main() {
     Node *end_node = random_node();
     int distance = manhattan_distance(start_node, end_node);
 
-    while (distance < 40 && !start_node->isBlocked && !end_node->isBlocked) {
+    while (distance < 40 || start_node->isBlocked || end_node->isBlocked) {
         start_node = random_node();
         end_node = random_node();
         distance = manhattan_distance(start_node, end_node);
     }
 
-    puts("Commencing operation A*...");
+    puts("Starting A*...");
     puts("");
 
     a_star(start_node, end_node);
