@@ -35,7 +35,7 @@ Node *create_node(int x, int y) {
 }
 
 const int GridWidth = 12;
-const int GridHeight = 85;
+const int GridHeight = 69;
 
 Node *nodes[GridWidth][GridHeight];
 
